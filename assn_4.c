@@ -10,6 +10,8 @@ typdef struct
 
 long searchForKey(int primaryKeyInInt, bTreeNode node, int bTreeOrder, long* nodeOffset);
 int insertIntoBTreeLeaf(int primaryKeyInInt, long *rootNode, int bTreeOrder);
+void initializeNode(bTreeNode *node, int bTreeOrder);
+void reInitializeNode(bTreeNode *node, int bTreeOrder)
 
 
 int main(int argc, char *argv[])
@@ -79,6 +81,23 @@ void initializeNode(bTreeNode *node, int bTreeOrder)
 	node->nodeChildOffsets = (long*)calloc(bTreeOrder, sizeof(long));
 }
 
+
+void reInitializeNode(bTreeNode *node, int bTreeOrder)
+{
+	int i = 0;
+	node->noOfKeys = 0;
+
+
+	for( i = 0; i < (bTreeOrder-1); i++)
+	{
+		node->nodeKeys[i] = 0;
+		node->nodeChildOffsets[i] = 0;
+	}
+	node->nodeChildOffsets[i] = 0;
+}
+
+
+
 long searchForKey(int primaryKeyInInt, long* rootNode, int bTreeOrder, long* nodeOffset)
 {
 	
@@ -109,7 +128,54 @@ long searchForKey(int primaryKeyInInt, long* rootNode, int bTreeOrder, long* nod
 
 
 
-int insertIntoBTreeLeaf(int primaryKeyInInt, long *rootNode, int bTreeOrder)
+
+void insertIntoBTree(long *rootNode, int primaryKeyInInt)
+{
+
+	if( rootNode->noOfKeys == (bTreeOrder-1) )
+	{
+		bTreeNode newRootNode;
+		initializeNode(newRootNode, bTreeOrder);
+
+		newRootNode.nodeChildOffsets[0] = rootNode;
+		//make newrightchild node as root node
+
+		insertIntoBTree_SplitNode(&newRootNode, 1);
+		insertIntoBtree_NonSplitNode(&newRootNode, primaryKeyInInt);
+
+	}
+	else
+		insertIntoBtree_NonSplitNode(&rootNode, primaryKeyInInt);
+}
+
+
+
+void insertIntoBTree_SplitNode(long *node, int position)
+{
+
+}
+
+void insertIntoBtree_NonSplitNode(long *node, int primaryKeyInInt)
+{
+
+	int i = 0;
+	if( node->nodeChildOffsets[0] == 0 )	//means the node is a leaf, it has no child
+	{
+		i = (node->noOfKeys - 1);
+		while( (i >= 0 ) && (node->nodeKeys[i] > primaryKeyInInt ) )
+		{
+			node->nodeKeys[i+1] = node->nodeKeys[i];
+			i--;
+		}
+
+		node->nodeKeys[i+1] = primaryKeyInInt;
+		node->noOfKeys = (node->noOfKeys + 1);
+	}
+}
+
+
+
+/*int insertIntoBTreeLeaf(int primaryKeyInInt, long *rootNode, int bTreeOrder)
 {
 	
 	int s = 0, i=0, newKeyPosition = 0, midValue = 0;
@@ -155,11 +221,22 @@ int insertIntoBTreeLeaf(int primaryKeyInInt, long *rootNode, int bTreeOrder)
 
 	for( i = 0; i<rightNode->noOfKeys; i++)
 	{
-		rightNode->nodeKeys[i] = tempKeyList[midValue+i];
+		rightNode->nodeKeys[i] = tempKeyList[midValue+1+i];
 	}
 
-	initializeNode(rootNode, bTreeOrder);
+	reInitializeNode(rootNode, bTreeOrder);
 	rootNode->noOfKeys = midValue;
+	for( i = 0; i < rootNode->noOfKeys; i++)
+	{
+		rootNode->nodeKeys[i] = tempKeyList[i];
+	}
 
 
+	insertSplitChild(tempKeyList[midValue], &rootNode, &rightchild);
 }
+
+
+void insertSplitChild(int valueToInsert, long *leftChildOffset, long *rightChildOffset)
+{
+
+}*/
