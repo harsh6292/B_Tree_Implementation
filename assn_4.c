@@ -1,6 +1,8 @@
 #include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 
-typdef struct
+typedef struct
 {
 	int noOfKeys;
 	int *nodeKeys;
@@ -8,15 +10,16 @@ typdef struct
 
 }bTreeNode;
 
-long searchForKey(int primaryKeyInInt, bTreeNode node, int bTreeOrder, long* nodeOffset);
-int insertIntoBTreeLeaf(int primaryKeyInInt, long *rootNode, int bTreeOrder);
+long searchForKey(int primaryKeyInInt, long rootNodeInLong, int bTreeOrder, long* nodeOffset);
+void insertIntoBTree(long rootNodeInLong, int primaryKeyInInt, int bTreeOrder);
 void initializeNode(bTreeNode *node, int bTreeOrder);
-void reInitializeNode(bTreeNode *node, int bTreeOrder)
+void insertIntoBTree_SplitNode(long nodeInLong, int position, int bTreeOrder);
+void insertIntoBtree_NonSplitNode(long nodeInLong, int primaryKeyInInt, int bTreeOrder);
 
 
 int main(int argc, char *argv[])
 {
-	 char *inputFileName, readLine[100], *funcToPerform = NULL, *primaryKeyInString = NULL;
+	 char *inputFileName, *readLine, *funcToPerform = NULL, *primaryKeyInString = NULL;
 	 int bTreeOrder = 0;
 	 int primaryKeyInInt = 0, getVal = 0;
 	 bTreeNode rootNode;
@@ -25,12 +28,13 @@ int main(int argc, char *argv[])
 
 
 	inputFileName = argv[1];
-	bTreeOrder = argv[2];
+	bTreeOrder = atoi(argv[2]);
 
-	initializeNode(rootNode, bTreeOrder);
+	initializeNode(&rootNode, bTreeOrder);
 
 	funcToPerform = 	(char*)malloc(sizeof(char)*100);
 	primaryKeyInString= (char*)malloc(sizeof(char)*100);
+	readLine = (char*)malloc(sizeof(char)*100);
 	
 
 	if( (inputFile = fopen(inputFileName, "r+b")) == NULL )
@@ -38,7 +42,7 @@ int main(int argc, char *argv[])
 		//File doesn't exist, Open in write mode
 		inputFile = fopen(inputFileName, "w+b");
 		//rootNodeOffset = -1;
-		rootNodeOffset = &rootNode;
+		rootNodeOffset = (long)&rootNode;
 
 	}
 	else
@@ -49,24 +53,45 @@ int main(int argc, char *argv[])
 	}
 
 
-	while( (fgets(&readLine, 100, stdin)) != NULL )
+	while( (fgets(readLine, 100, stdin)) != NULL )
 	{
 		funcToPerform = strtok(readLine, " \n");
-		primaryKeyInString = strtok(NULL, "\n");
-
-		primaryKeyInInt = (int)strtoll(primaryKeyInString, NULL, 10);
-
-		getVal = searchForKey(primaryKeyInInt, &rootNode, bTreeOrder, &tempNodeOffset);
-
-		if( (getVal == -1) && (tempNodeOffset != -2))
+		
+		if( strcmp(funcToPerform, "add") == 0 )
 		{
-			//means key not found or pointer to next level is being returned
-			insertIntoBTree(primaryKeyInInt, &rootNode, bTreeOrder);
+			primaryKeyInString = strtok(NULL, "\n");
+
+			primaryKeyInInt = (int)strtoll(primaryKeyInString, NULL, 10);
+
+			tempNodeOffset = 0;
+			getVal = searchForKey(primaryKeyInInt, rootNodeOffset, bTreeOrder, &tempNodeOffset);
+
+			if( (getVal == -1) && (tempNodeOffset != -2))
+			{
+				//means key not found or pointer to next level is being returned
+				insertIntoBTree(rootNodeOffset, primaryKeyInInt, bTreeOrder);
+			}
+			else
+			{
+				printf("Entry with key=%d already exists\n", primaryKeyInInt);
+			}
 		}
-		else
+		else if( strcmp(funcToPerform, "find") == 0 )
 		{
-			printf("Entry with key=%d already exists\n", primaryKeyInInt);
+			tempNodeOffset = 0;
+			getVal = searchForKey(primaryKeyInInt, rootNodeOffset, bTreeOrder, &tempNodeOffset);
+
+			if( (getVal == -1) && (tempNodeOffset != -2))
+			{
+				//means key not found or pointer to next level is being returned
+				printf("Entry with key=%d does not exist\n", primaryKeyInInt);
+			}
+			else
+			{
+				printf("Entry with key=%d exists\n", primaryKeyInInt);
+			}
 		}
+
 		
 	}
 
@@ -82,26 +107,13 @@ void initializeNode(bTreeNode *node, int bTreeOrder)
 }
 
 
-void reInitializeNode(bTreeNode *node, int bTreeOrder)
-{
-	int i = 0;
-	node->noOfKeys = 0;
 
-
-	for( i = 0; i < (bTreeOrder-1); i++)
-	{
-		node->nodeKeys[i] = 0;
-		node->nodeChildOffsets[i] = 0;
-	}
-	node->nodeChildOffsets[i] = 0;
-}
-
-
-
-long searchForKey(int primaryKeyInInt, long* rootNode, int bTreeOrder, long* nodeOffset)
+long searchForKey(int primaryKeyInInt, long rootNodeInLong, int bTreeOrder, long* nodeOffset)
 {
 	
 	int s = 0;
+
+	bTreeNode *rootNode = (bTreeNode*)rootNodeInLong;
 
 	while( s< (rootNode->noOfKeys) )
 	{
@@ -117,10 +129,10 @@ long searchForKey(int primaryKeyInInt, long* rootNode, int bTreeOrder, long* nod
 	}
 
 	if (rootNode->nodeChildOffsets[s] != 0 )
-		return(searchForKey(primaryKeyInInt, node.nodeChildOffsets[s], bTreeOrder));
+		return(searchForKey(primaryKeyInInt, rootNode->nodeChildOffsets[s], bTreeOrder, nodeOffset));
 	else
 	{
-		*nodeOffset = rootNode;
+		*nodeOffset = (long)rootNode;
 		return(-1);
 	}
 
@@ -129,40 +141,86 @@ long searchForKey(int primaryKeyInInt, long* rootNode, int bTreeOrder, long* nod
 
 
 
-void insertIntoBTree(long *rootNode, int primaryKeyInInt)
+void insertIntoBTree(long rootNodeInLong, int primaryKeyInInt, int bTreeOrder)
 {
+
+	bTreeNode *rootNode = (bTreeNode*)rootNodeInLong;
 
 	if( rootNode->noOfKeys == (bTreeOrder-1) )
 	{
 		bTreeNode newRootNode;
-		initializeNode(newRootNode, bTreeOrder);
+		initializeNode(&newRootNode, bTreeOrder);
 
-		newRootNode.nodeChildOffsets[0] = rootNode;
+		newRootNode.nodeChildOffsets[0] = (long)rootNode;
 		//make newrightchild node as root node
 
-		insertIntoBTree_SplitNode(&newRootNode, 1);
-		insertIntoBtree_NonSplitNode(&newRootNode, primaryKeyInInt);
+		insertIntoBTree_SplitNode( (long)&newRootNode, 1, bTreeOrder);
+		insertIntoBtree_NonSplitNode( (long)&newRootNode, primaryKeyInInt, bTreeOrder);
 
 	}
 	else
-		insertIntoBtree_NonSplitNode(&rootNode, primaryKeyInInt);
+		insertIntoBtree_NonSplitNode( (long)&rootNode, primaryKeyInInt, bTreeOrder);
 }
 
 
 
-void insertIntoBTree_SplitNode(long *node, int position)
+void insertIntoBTree_SplitNode(long nodeInLong, int position, int bTreeOrder)
 {
+	bTreeNode *node = (bTreeNode*)nodeInLong;
+
+	int midValue = 0, i = 0;
+	bTreeNode *childNode = NULL;
+	bTreeNode newRightNode;
+	
+	initializeNode(&newRightNode, bTreeOrder);
+	midValue = (bTreeOrder/2);
+	newRightNode.noOfKeys = midValue;
+
+	childNode = (bTreeNode*)node->nodeChildOffsets[position];
+
+	for( i = 0; i<midValue; i++)
+	{
+		newRightNode.nodeKeys[i] = childNode->nodeKeys[midValue+i+1];
+	}
+
+	if(childNode->nodeChildOffsets[0] != 0)
+	{
+		for( i = 0; i<midValue; i++)
+		{
+			newRightNode.nodeChildOffsets[i] = childNode->nodeChildOffsets[midValue+i];
+		}
+	}
+
+	childNode->noOfKeys = midValue;
+
+	for( i = (node->noOfKeys+1); i>position; i--)
+	{
+		node->nodeChildOffsets[i+1] = node->nodeChildOffsets[i];
+	}
+
+	node->nodeChildOffsets[i+1] = (long)&newRightNode;
+
+	for( i =(node->noOfKeys-1); i>=position; i-- )
+	{
+		node->nodeKeys[i+1] = node->nodeKeys[i];
+	}
+
+	node->nodeKeys[i] = childNode->nodeKeys[midValue];
+	node->noOfKeys = (node->noOfKeys + 1);
 
 }
 
-void insertIntoBtree_NonSplitNode(long *node, int primaryKeyInInt)
+void insertIntoBtree_NonSplitNode(long nodeInLong, int primaryKeyInInt, int bTreeOrder)
 {
 
 	int i = 0;
+	bTreeNode *childOffset = NULL;
+	bTreeNode *node = (bTreeNode*)nodeInLong;
+
 	if( node->nodeChildOffsets[0] == 0 )	//means the node is a leaf, it has no child
 	{
 		i = (node->noOfKeys - 1);
-		while( (i >= 0 ) && (node->nodeKeys[i] > primaryKeyInInt ) )
+		while( (i >= 0 ) && (node->nodeKeys[i] > primaryKeyInInt ) ) //shifting values > primarykey to one position right
 		{
 			node->nodeKeys[i+1] = node->nodeKeys[i];
 			i--;
@@ -170,6 +228,29 @@ void insertIntoBtree_NonSplitNode(long *node, int primaryKeyInInt)
 
 		node->nodeKeys[i+1] = primaryKeyInInt;
 		node->noOfKeys = (node->noOfKeys + 1);
+
+		//write to file
+	}
+	else
+	{
+		i = (node->noOfKeys - 1);
+		while( (i >= 0 ) && (node->nodeKeys[i] > primaryKeyInInt ) ) //finding the right offset to put key value into
+		{
+			i--;
+		}
+		i++;
+
+		//read from file the offset of node at i
+		childOffset = (bTreeNode*)node->nodeChildOffsets[i];
+
+		if( childOffset->noOfKeys == (bTreeOrder-1) )
+		{
+			insertIntoBTree_SplitNode( (long)node, i, bTreeOrder);
+			if( primaryKeyInInt > node->nodeKeys[i])
+				i++;
+		}
+
+		insertIntoBtree_NonSplitNode( (long)childOffset, primaryKeyInInt, bTreeOrder);
 	}
 }
 
