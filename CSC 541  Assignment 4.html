@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<!-- saved from url=(0063)http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/index.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" context="IE=9">
+<meta charset="UTF-8">
+
+<!-- JQuery package --->
+
+<script type="text/javascript" src="./CSC 541  Assignment 4_files/jquery-1.9.1.min.js"></script><style type="text/css"></style>
+
+<!-- Google Code hyphenator -->
+
+<script type="text/javascript" src="./CSC 541  Assignment 4_files/hyphenate.js"></script>
+
+<!-- Google fonts stuff -->
+
+<link rel="stylesheet" type="text/css" href="./CSC 541  Assignment 4_files/css">
+<link rel="stylesheet" type="text/css" href="./CSC 541  Assignment 4_files/css(1)">
+<link rel="stylesheet" type="text/css" href="./CSC 541  Assignment 4_files/css(2)">
+
+<!-- Course page CSS and JS -->
+
+<link type="text/css" href="./CSC 541  Assignment 4_files/course.css" rel="stylesheet">
+<script type="text/javascript" src="./CSC 541  Assignment 4_files/mod-date.js"></script>
+
+
+<title>CSC 541: Assignment 4</title>
+</head>
+
+<body bgcolor="white" class="hyphenate">
+
+<div style="text-align: center;">
+<span style="
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 1200px;
+  height: 300px;
+  background-image: url( &#39;../hdd.png&#39; );
+  background-repeat: no-repeat;
+">
+<div style="
+  position: absolute;
+  align: left;
+  text-align: left;
+  top: 40px;
+  left: 10px;
+  font-family: &#39;Trebuchet MS&#39;, Helvetica, sans-serif;
+  font-size: 16pt;
+  font-weight: normal;
+  color: black;
+  filter: alpha(opacity=80);
+  opacity: .8;
+">
+  <a href="http://www.csc.ncsu.edu/faculty/healey/csc541/index.html">CSC 541</a><br>
+  As­sign­ment 4
+  <div style="padding-top: .3em; font-size: 10pt;">
+    B-Trees
+  </div>
+</div>
+<div style="
+  position: absolute;
+  align: left;
+  top: 0px;
+  left: 0px;
+">
+  <a href="http://www.ncsu.edu/">
+  <img src="./CSC 541  Assignment 4_files/nc-state-logo.png" style="border-style: none">
+  </a>
+</div>
+</span>
+</div>
+
+<!--Spacer after image of one "line"-->
+
+<div style="height: 1em;"></div>
+
+
+<h2>In­tro­duc­tion</h2>
+
+<p>The goals of this as­sign­ment are two-fold:</p>
+
+<ol>
+
+<li>To in­tro­duce you to search­ing data on disk using B-trees.
+
+</li><li>To in­ves­ti­gate how chang­ing the order of a B-tree af­fects its
+per­for­mance.
+
+</li></ol>
+
+<h2>Index File</h2>
+
+<p>Dur­ing this as­sign­ment you will cre­ate, search, and man­age a bi­nary
+index file of in­te­ger key val­ues. The val­ues stored in the file will
+be spec­i­fied by the user. You will struc­ture the file as a B-tree.</p>
+
+
+<h2>Pro­gram Ex­e­cu­tion</h2>
+
+<p>Your pro­gram will be named <code>assn_4</code> and it will run from
+the com­mand line. Two com­mand line ar­gu­ments will be spec­i­fied: the
+name of the index file, and a B-tree order.</p>
+
+<blockquote>
+<code>assn_4 index-file order</code>
+</blockquote>
+
+<p>For ex­am­ple, ex­e­cut­ing your pro­gram as fol­lows</p>
+
+<blockquote>
+<code>assn_4 index.bin 4</code>
+</blockquote>
+
+<p>would open an index file called <code>index.bin</code> that holds
+in­te­ger keys stored in an or­der-4 B-tree. You can
+as­sume <code>order</code> will al­ways be ≥ 3. For con­ve­nience, we
+refer to the index file as <code>index.bin</code> through­out the
+re­main­der of the as­sign­ment.</p>
+
+<p><b>Note.</b> If you are asked open an ex­ist­ing index file, you can
+as­sume the B-tree order spec­i­fied on the com­mand line matches the
+order that was used when the index file was first cre­ated.</p>
+
+
+<h2>B-Tree Nodes</h2>
+
+<p>Your pro­gram is al­lowed to hold in­di­vid­ual B-tree nodes in
+mem­ory—but not the en­tire tree—at any given time. Your
+B-tree node should have a struc­ture and usage sim­i­lar to the
+fol­low­ing.</p>
+
+<div class="codeblock" style="margin-top: 0px;">
+#in­clude &lt;stdlib.h&gt;
+
+int order = 4;    /* B-tree order */
+
+type­def struct {  /* B-tree node */
+  int   n;        /* Num­ber of keys in node */
+  int  *key;      /* Node's keys */
+  long *child;    /* Node's child sub­tree off­sets */
+} btree_n­ode;
+
+btree_n­ode node;  /* Sin­gle B-tree node */
+
+node.n = 0;
+node.​key = (int *) cal­loc( order - 1, sizeof( int ) );
+node.​child = (long *) cal­loc( order, sizeof( long ) );
+</div>
+
+<p><b>Note.</b> Be care­ful when you're read­ing and writ­ing data
+struc­tures with dy­nam­i­cally al­lo­cated mem­ory. For ex­am­ple, try­ing to
+write <code>node</code> like this
+
+</p><div class="codeblock" style="margin-top: 0px;">
+fwrite( &amp;node, sizeof( btree_n­ode ), 1, fp );
+</div>
+
+<p>will write <code>node</code>'s key count, the pointer value for its
+key array, and the pointer value for its child off­set array, but <b>it
+will not</b> write the con­tents of the key and child off­set
+ar­rays. The ar­rays' con­tents and not point­ers to their con­tents need
+to be writ­ten ex­plic­itly in­stead.</p>
+
+<div class="codeblock" style="margin-top: 0px;">
+fwrite( &amp;node.n, sizeof( int ), 1, fp );
+fwrite( node.​key, sizeof( int ), order - 1, fp );
+fwrite( node.​child, sizeof( long ), order, fp );
+</div>
+
+<p>Read­ing <code>node</code> struc­tures from disk would use a sim­i­lar
+strat­egy.</p>
+
+
+<h4>Root Node Off­set</h4>
+
+<p>In order to man­age any tree, you need to lo­cate its root
+node. Ini­tially the root node will be stored near the front
+of <code>index.bin</code>. If the root node splits, how­ever, a new
+root will be ap­pended to the end of <code>index.bin</code>. The root
+node's off­set will be main­tained per­sis­tently by stor­ing it at the
+front of <code>index.bin</code> when the file is closed, and read­ing
+it when the file is opened.</p>
+
+<div class="codeblock" style="margin-top: 0px;">
+#in­clude &lt;stdio.h&gt;
+
+FILE *fp;    /* Input file stream */
+long  root;  /* Off­set of B-tree root node */
+
+fp = fopen( "index.​bin", "r+b" );
+
+/*  If file doesn't exist, set root off­set to un­known and cre­ate
+ *  file, oth­er­wise read the root off­set at the front of the file */
+
+if ( fp == NULL ) {
+  root = -1;
+  fp = fopen( "index.​bin", "w+b" );
+  fwrite( &amp;root, sizeof( long ), 1, fp );
+} else {
+  fread( &amp;root, sizeof( long ), 1, fp );
+}
+</div>
+
+
+<h2>User In­ter­face</h2>
+
+<p>The user will com­mu­ni­cate with your pro­gram through a set of
+com­mands typed at the key­board. Your pro­gram must sup­port four sim­ple
+com­mands:</p>
+
+<ul>
+
+<li><code>add k</code><br>
+
+Add a new in­te­ger key with value <code>k</code>
+to <code>index.bin</code>.
+
+</li><li><code>find k</code><br>
+
+Find an entry with a key value of <code>k</code>
+in <code>index.bin</code>, if it ex­ists.
+
+</li><li><code>print</code><br>
+
+Print the con­tents and the struc­ture of the B-tree on-screen.
+
+</li><li><code>end</code><br>
+
+Up­date the root node's off­set at the front of the
+<code>index.bin</code>, and close the index file, and end the pro­gram.
+
+</li></ul>
+
+
+<h4>Add</h4>
+
+<p>Use a stan­dard B-tree al­go­rithm to add a new key <i>k</i> to the
+index file.</p>
+
+<ol>
+
+<li>Search the B-tree for the leaf node <i>L</i> re­spon­si­ble for
+<i>k</i>. If <i>k</i> is stored in <i>L</i>'s key list, print
+
+<blockquote style="margin-left: 0.25in;">
+<code>Entry with key=k already exists</code>
+</blockquote>
+
+on-screen and stop, since du­pli­cate keys are not al­lowed.
+
+</li><li> Cre­ate a new key list <i>K</i> that con­tains <i>L</i>'s keys,
+plus <i>k</i>, sorted in as­cend­ing order.
+
+</li><li>If <i>L</i>'s key list is not full, re­place it with <i>K</i>,
+up­date <i>L</i>'s child off­sets, write <i>L</i> back to disk, and
+stop.
+
+</li><li>Oth­er­wise, split <i>K</i> about its me­dian key
+value <i>k<sub>m</sub></i> into left and right key lists
+
+<i>K<sub>L</sub></i> = (<i>k</i><sub>0</sub>,
+... , <i>k</i><sub><i>m</i>-1</sub>) and
+
+<i>K<sub>R</sub></i> = (<i>k</i><sub><i>m</i>+1</sub>,
+... , <i>k</i><sub><i>n</i>-1</sub>).
+
+Use ceil­ing to cal­cu­late
+
+<i>m</i> = ⌈<sup>(n-1)</sup>/<sub>2</sub>⌉.
+
+For ex­am­ple, if <i>n</i> = 3, <i>m</i> = 1. If <i>n</i> = 4, <i>m</i>
+= 2.
+
+</li><li>Save <i>K<sub>L</sub></i> and its as­so­ci­ated child off­sets
+in <i>L</i>, then write <i>L</i> back to disk.
+
+</li><li>Save <i>K<sub>R</sub></i> and its as­so­ci­ated child off­sets in a
+new node <i>R</i>, then ap­pend
+<i>R</i> to the end of the index file.
+
+</li><li>Pro­mote <i>k<sub>m</sub></i> , <i>L</i>'s off­set,
+and <i>R</i>'s off­set and in­sert them in <i>L</i>'s par­ent node. If
+the par­ent's key list is full, re­cur­sively split its list and pro­mote
+the me­dian to its par­ent.
+
+</li><li>If a pro­mo­tion is made to a root node with a full key list, split
+and cre­ate a new root node hold­ing <i>k<sub>m</sub></i> and off­sets
+to <i>L</i> and <i>R</i>.
+
+</li></ol>
+
+
+<h4>Find</h4>
+
+<p>To find key value <i>k</i> in the index file, search the root node
+for <i>k</i>. If <i>k</i> is found, the search suc­ceeds. Oth­er­wise,
+de­ter­mine the child sub­tree <i>S</i> that is re­spon­si­ble for <i>k</i>,
+then re­cur­sively search <i>S</i>.  If <i>k</i> is found dur­ing the
+re­cur­sive search, print
+
+</p><blockquote>
+<code>Entry with key=k exists</code>
+</blockquote>
+
+<p>on-screen. If at any point in the re­cur­sion <i>S</i> does not
+exist, print</p>
+
+<blockquote>
+<code>Entry with key=k does not exist</code>
+</blockquote>
+
+<p>on-screen.</p>
+
+
+<a name="print_cmd"></a>
+<h4>Print</h4>
+
+<p>This com­mand prints the con­tents of the B-tree on-screen, level by
+level. Begin by con­sid­er­ing a sin­gle B-tree node. To print the
+con­tents of the node on-screen, print its key val­ues sep­a­rated by
+com­mas.</p>
+
+<div class="codeblock" style="margin-top: 0px;">
+int         i;      /* Loop counter */
+btree_n­ode  node;   /* Node to print */
+long        off;    /* Node's off­set */
+
+for( i = 0; i &lt; node.n - 1; i++ ) {
+  printf( "%d,", node.​key[ i ] );
+}
+printf( "%d", node.​key[ node.n - 1 ] );
+</div>
+
+<p>To print the en­tire tree, start by print­ing the root node. Next,
+print the root node's chil­dren on a new line, sep­a­rat­ing each child
+node's out­put by a space char­ac­ter. Then, print their chil­dren on a
+new line, and so on until all the nodes in the tree are printed. This
+ap­proach prints the nodes on each level of the B-tree left-to-right on
+a com­mon line.</p>
+
+<p>For ex­am­ple, in­sert­ing the in­te­gers 1 through 13 in­clu­sive into an
+or­der-4 B-tree would pro­duce the fol­low­ing out­put.</p>
+
+<div class="codeblock" style="margin-top: 0px">
+ 1: 9
+ 2: 3,6 12
+ 3: 1,2 4,5 7,8 10,11 13
+</div>
+
+<p><b>Hint.</b> To process nodes left-to-right level-by-level, do not
+use re­cur­sion. In­stead, cre­ate a queue con­tain­ing the root node's
+off­set. Re­move the off­set at the front of the queue (ini­tially the
+root's off­set) and read the cor­re­spond­ing node from disk. Ap­pend the
+node's non-empty sub­tree off­sets to the end of the queue, then print
+the node's key val­ues. Con­tinue until the queue is empty.</p>
+
+
+<h4>End</h4>
+
+<p>This com­mand ends the pro­gram by writ­ing the root node's off­set to
+the front of <code>index.bin</code>, then clos­ing the index file.</p>
+
+
+<h2>Pro­gram­ming En­vi­ron­ment</h2>
+
+<p>All pro­grams must be writ­ten in C, and com­piled to run on
+the <code>remote.eos.ncsu.edu</code> Linux server. Any ssh client can
+be used to ac­cess your Unity ac­count and AFS stor­age space on this
+ma­chine.</p>
+
+<p>Your as­sign­ment will be run au­to­mat­i­cally, and the out­put it
+pro­duces will be com­pared to known, cor­rect out­put
+using <code>diff</code>. Be­cause of this, <b>your out­put must con­form
+to the print com­mand's de­scrip­tion</b>. If it doesn't,
+<code>diff</code> will re­port your out­put as in­cor­rect, and it will be marked
+ac­cord­ingly.</p>
+
+
+<h2>Sup­ple­men­tal Ma­te­r­ial</h2>
+
+
+<p>In order to help you test your pro­gram, we pro­vide ex­am­ple input
+and out­put files.</p>
+
+<ul>
+
+<li><a href="http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/input-01.txt"><code>input-01.txt</code></a>, an input
+file of com­mands ap­plied to an ini­tially empty index file saved as an
+or­der-4 B-tree, and
+
+</li><li><a href="http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/input-02.txt"><code>input-02.txt</code></a>, an input
+file of com­mands ap­plied to the index file pro­duced
+by <code>input-01.txt</code>.
+
+</li></ul>
+
+<p>The out­put files show what your pro­gram should print after each
+input file is processed.</p>
+
+<ul>
+
+<li><a href="http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/output-01.txt"><code>output-01.txt</code></a>, the out­put
+your pro­gram should pro­duce after it
+processes <code>input-01.txt</code>.
+
+</li><li><a href="http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/output-02.txt"><code>output-02.txt</code></a>, the out­put
+your pro­gram should pro­duce after it
+processes <code>input-02.txt</code>.
+
+</li></ul>
+
+<p>To test your pro­gram, you would issue the fol­low­ing com­mands:</p>
+
+<div class="codeblock" style="margin-top: 8px;">
+% rm index.​bin
+% ass­n_4 index.​bin 4 &lt; input-01.​txt &gt; my-output-01.​txt
+% ass­n_4 index.​bin 4 &lt; input-02.​txt &gt; my-output-02.​txt
+</div>
+
+<p>You can use <code>diff</code> to com­pare out­put from your pro­gram
+to our out­put files. If your pro­gram is run­ning prop­erly and your
+out­put is for­mat­ted cor­rectly, your pro­gram should pro­duce out­put
+iden­ti­cal to what is in these files.</p>
+
+<p>Please re­mem­ber, the files we're pro­vid­ing here are meant to serve
+as ex­am­ples only. Apart from hold­ing valid com­mands, <b>you can­not
+make any as­sump­tions</b> about the size or the con­tent of the input
+files we will use to test your pro­gram.</p>
+
+<!--
+<h4>Test Files</h4>
+
+<p>The following files were used to test your program.</p>
+
+<ul>
+<li><b>Simple Test Case.</b>
+  <ul class="sub">
+  <li><a href="test/input-simple.txt"><code>input-simple.txt</code></a>
+  <li><a href="test/output-simple.txt"><code>output-simple-first.txt</code></a>
+  </ul>
+
+<li><b>Normal Test Case.</b>
+  <ul class="sub">
+  <li><a href="test/input.txt"><code>input.txt</code></a>
+  <li><a href="test/output.txt"><code>output.txt</code></a>,
+    <a href="test/output-order-4.txt"><code>output-order-4.txt</code></a>,
+    <a href="test/output-order-10.txt"><code>output-order-10.txt</code></a>
+    <a href="test/output-order-20.txt"><code>output-order-20.txt</code></a>
+  </ul>
+
+<li><b>Multi-Run Test Case.</b>
+  <ul class="sub">
+  <li><a href="test/input-01.txt"><code>input-01.txt</code></a>,
+    <a href="test/input-02.txt"><code>input-02.txt</code></a>
+  <li><a href="test/output-01.txt"><code>output-01.txt</code></a>,
+    <a href="test/output-02.txt"><code>output-02.txt</code></a>
+  </ul>
+
+</ul>
+
+<p>Your program was run on all three test cases using an order-3
+B-tree.</p>
+
+<div class="codeblock" style="margin-top: 8px;">
+% rm index.bin
+% assn_4 index.bin 3 < input-simple.txt > my-output-simple.txt
+% rm index.bin
+% assn_4 index.bin 3 < input.txt > my-output.txt
+% rm index.bin
+% assn_4 index.bin 3 < input-01.txt > my-output-01.txt
+% assn_4 index.bin 3 < input-02.txt > my-output-02.txt
+</div>
+
+<p>Your program was also run on the <code>input.txt</code> normal test
+case using order-4, order-10, and order-20 B-trees.</p>
+
+<div class="codeblock" style="margin-top: 8px;">
+% rm index.bin
+% assn_4 index.bin 4 < input.txt > my-output-order-4.txt 
+% rm index.bin
+% assn_4 index.bin 10 < input.txt > my-output-order-10.txt 
+% rm index.bin
+% assn_4 index.bin 20 < input.txt > my-output-order-20.txt 
+</div>
+-->
+
+<h2>Hand-In Re­quire­ments</h2>
+
+<p>Use <a href="https://wolfware.ncsu.edu/?term=current&type=complex&what=CSC%20541" target="_blank">Moo­dle</a> (the on­line as­sign­ment sub­mis­sion
+soft­ware) to sub­mit the fol­low­ing files:</p>
+
+<ul>
+
+  <li><code>assn_4</code>, a Linux ex­e­cutable of your
+  fin­ished as­sign­ment, and
+	
+  </li><li>all as­so­ci­ated source code files (these can be called any­thing
+  you want).
+
+</li></ul>
+
+<p>There are four im­por­tant re­quire­ments that your as­sign­ment must
+sat­isfy.</p>
+
+<ol>
+
+  <li>Your ex­e­cutable file must be named ex­actly as shown above. The
+  pro­gram will be run and marked elec­tron­i­cally using a script file,
+  so using a dif­fer­ent name means the ex­e­cutable will not be found,
+  and sub­se­quently will not be marked.
+
+  </li><li>Your pro­gram must be com­piled to run
+  on <code>remote.eos.ncsu.edu</code>. If we can­not run your pro­gram,
+  we will not be able to mark it, and we will be forced to as­sign you
+  a grade of 0.
+
+  </li><li>Your pro­gram must pro­duce out­put that ex­actly matches the for­mat
+  de­scribed in the <a href="http://www.csc.ncsu.edu/faculty/healey/csc541/assn_4/index.html#print_cmd">print com­mand</a>
+  sec­tion of this as­sign­ment. If it doesn't, it will not pass our
+  au­to­matic com­par­i­son to known, cor­rect out­put.
+
+  </li><li>You must sub­mit your source code with your ex­e­cutable prior to
+  the sub­mis­sion dead­line. If you do not sub­mit your source code, we
+  can­not MOSS it to check for code sim­i­lar­ity. Be­cause of this, any
+  as­sign­ment that does not in­clude source code will be as­signed a grade
+  of 0.
+
+</li></ol>
+
+<!-- The mod-date span will be updated by code in course.js -->
+
+<hr class="fig_top">
+<div class="footer">
+  Up­dated <span id="mod-date">18-Aug-14</span></div>
+
+
+
+
+
+<!--  LocalWords:  CSC stdlib typedef struct subtree btree fp
+ -->
+<!--  LocalWords:  sizeof fwrite fopen fread printf ld AFS Moodle txt
+ -->
+<!--  LocalWords:  calloc
+ -->
+</body></html>

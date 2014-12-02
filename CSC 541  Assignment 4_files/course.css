@@ -1,0 +1,202 @@
+body {
+/*font-family: 'Times New Roman', Times, serif;*/
+  font-family: 'Noto Serif', Georgia,  Times, serif;
+  font-size: 10pt;
+}
+
+h2 {
+  position: relative;
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-top: .7em;
+  margin-bottom: .2em;
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 14pt;
+  text-align: justify;
+  text-justify: distribute;
+}
+
+h4 {
+  position: relative;
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-top: .7em;
+  margin-bottom: .2em;
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 11pt;
+  text-align: justify;
+  text-justify: distribute;
+}
+
+p {
+  position: relative;
+/*left: 5%;*/
+/*width: 90%;*/
+  margin-left: 5%;
+  margin-right: 5%;
+  text-align: justify;
+  text-justify: distribute;
+  margin-top: .5em;
+  margin-bottom: .5em;
+}
+
+blockquote {
+  position: relative;
+/*left: 5%;*/
+/*width: 90%;*/
+  margin-left: 7.5%;
+  margin-right: 7.5%;
+  margin-top: .5em;
+  margin-bottom: .5em;
+}
+
+ol,ul {
+  position: relative;
+  margin-left: 5%;
+  margin-right: 10%;
+  text-align: justify;
+  text-justify: distribute;
+}
+
+ol > li {
+  margin-top: .25em;
+  margin-bottom: .25em;
+}
+
+ol > li.tight {
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+
+ul.sub,ol.sub {
+  position: relative;
+  margin-left: 0%;
+  margin-right: 5%;
+  text-align: justify;
+  text-justify: distribute;
+}
+
+table {
+  position: relative;
+  margin-left: 5%;
+  margin-right: 5%;
+  border-collapse: collapse;
+}
+
+th {
+  border-width: 1px;
+  padding: 8px;
+  border-style: solid;
+  border-color: #5d8194;
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 90%;
+  font-weight: bold;
+  background-color: #a9c2cf;
+}
+
+tr.even {
+  background-color: #f1faff;
+}
+
+tr.odd {
+  background-color: #e7eefb;
+}
+
+td {
+  vertical-align: top;
+  text-align: left;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #a9c2cf;
+  padding: 8px;
+}
+
+td.list {
+  vertical-align: bottom;
+  border-width: 0;
+  padding: 0;
+}
+
+caption {
+  caption-side: bottom;
+  text-align: justify;
+  font-family: 'Noto Serif', Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  font-size: 0.8em;
+}
+
+div.footer {
+  position: relative;
+/*right: 5%;*/
+  margin-right: 5%;
+  float: right;
+  font-size: 0.8em;
+//font-family: 'Trebuchet MS', sans-serif;
+  margin-bottom: 0.5em;
+}
+
+div.list {
+  margin-left: 4%;
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  margin-left: 5%;
+  margin-right: 5%;
+  margin-top: 1.5em;
+  margin-bottom: 1em;
+  color: #a9c2cf;
+  background-color: #a9c2cf;
+  background-image: -webkit-linear-gradient(left, #f7f9fb, #a9c2cf, #f7f9fb);
+  background-image: -moz-linear-gradient(left, #f7f9fb, #a9c2cf, #f7f9fb);
+  background-image: -ms-linear-gradient(left, #f7f9fb, #a9c2cf, #f7f9fb);
+  background-image: -o-linear-gradient(left, #f7f9fb, #a9c2cf, #f7f9fb);
+  //filter: progid:DXImageTransform.Microsoft.gradient(GradientType=1, startColorstr="#f7f9fb", endColorstr="#a9c2cf");
+}
+
+b {
+  font-family: 'Trebuchet MS', sans-serif;
+}
+
+em {
+  font-style: italic;
+}
+
+a:link {
+  text-decoration: none;
+}
+a:visited {
+  text-decoration: none;
+  color: #6900ab;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 0.9em;
+}
+
+.code {
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 0.9em;
+}
+
+.codeblock {
+  position: relative;
+  left: 8%;
+  width: 84%;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  white-space: pre;
+  font-family: "Lucida Console", Monaco, monospace;
+  font-size: 0.9em;
+}
+
+.shadow {
+  -moz-box-shadow: 1px 1px 2px #777777;
+  -webkit-box-shadow: 1px 1px 2px #777777;
+  box-shadow: 1px 1px 2px #777777;
+}
